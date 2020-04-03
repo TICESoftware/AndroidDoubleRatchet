@@ -7,19 +7,21 @@ class Message(val header: Header, val cipher: ByteArray)
 class Header(val publicKey: Key, val numberOfMessagesInPreviousSendingChain: Int, val messageNumber: Int) {
     fun bytes(): ByteArray {
         var bytes = publicKey.asBytes.clone()
-
-        if (numberOfMessagesInPreviousSendingChain < Int.MAX_VALUE) {
-            bytes += ByteArray(4) // Padding to be compatible with 64-bit
-        }
-
-        bytes += BigInteger.valueOf(numberOfMessagesInPreviousSendingChain.toLong()).toByteArray()
-
-        if (messageNumber < Int.MAX_VALUE) {
-            bytes += ByteArray(4) // Padding to be compatible with 64-bit
-        }
-
-        bytes += BigInteger.valueOf(messageNumber.toLong()).toByteArray()
+        bytes += byteArray(numberOfMessagesInPreviousSendingChain, 8)
+        bytes += byteArray(messageNumber, 8)
 
         return bytes
+    }
+
+    private fun byteArray(value: Int, byteCount: Int): ByteArray {
+        val valueBytes = BigInteger.valueOf(value.toLong()).toByteArray()
+
+        if (valueBytes.size > byteCount) {
+            throw IllegalArgumentException("Binary representation of given value needs more bytes then specified by byteCount.")
+        }
+
+        val paddingBytes = ByteArray(byteCount - valueBytes.size)
+
+        return paddingBytes + valueBytes
     }
 }
