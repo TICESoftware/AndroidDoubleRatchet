@@ -5,10 +5,14 @@ import android.os.Bundle
 import com.goterl.lazycode.lazysodium.LazySodiumAndroid
 import com.goterl.lazycode.lazysodium.SodiumAndroid
 import com.goterl.lazycode.lazysodium.utils.Key
+import com.goterl.lazycode.lazysodium.utils.KeyPair
 import com.ticeapp.androiddoubleratchet.DRError
 import com.ticeapp.androiddoubleratchet.DoubleRatchet
 import com.ticeapp.androiddoubleratchet.Header
 import com.ticeapp.androiddoubleratchet.Message
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.ByteArraySerializer
+import kotlinx.serialization.json.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,6 +22,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         testLibrary()
+        testGenerateKeyPair()
+        testInitiateConversation()
+        testProcessFirstMessage()
     }
 
     @ExperimentalStdlibApi
@@ -287,5 +294,168 @@ class MainActivity : AppCompatActivity() {
         if (!headerBytesShouldBe.contentEquals(headerBytesAre)) {
             throw Exception("Test failed")
         }
+    }
+
+    private fun testGenerateKeyPair() {
+        val sodium = LazySodiumAndroid(SodiumAndroid())
+
+        val keyPair = sodium.cryptoKxKeypair()
+        val keyPairString = Json.stringify(KeyPairSerializer, keyPair)
+
+        println(keyPairString)
+    }
+
+    @ExperimentalStdlibApi
+    private fun testInitiateConversation() {
+        val ownKeyPairString = """{"secretKey":"326873752B2547AEB5C2A652FEDAC5EBFD652E0F944F0AF1E66C640985A627A9","publicKey":"D3A6E65CD63116F38C361F0CC857216E792552D740C79F603D23262C6DC20F56"}"""
+        val otherKeyPairString = """{"secretKey":"e0f8e1fb1e2a33e63d4e67a1488dd2c802d79d8c4ab2fc2684ab2cb4175b55b2","publicKey":"9258fd6cf6ee77f0518d91265438a02a60c71a449a56b9ce4ceec0015b17e35a"}"""
+        val sharedSecretString = """1208db7dad21875cf6ba8c96f8fbfae00fb4c06ab3cbd1597b635c3989b1a67a"""
+
+        val sodium = LazySodiumAndroid(SodiumAndroid())
+
+        val ownKeyPair = Json.parse(KeyPairSerializer, ownKeyPairString)
+        val otherKeyPair = Json.parse(KeyPairSerializer, otherKeyPairString)
+        val sharedSecret = sodium.sodiumHex2Bin(sharedSecretString)
+
+        val doubleRatchet = DoubleRatchet(ownKeyPair, otherKeyPair.publicKey, sharedSecret, 20, 20, "Info")
+
+        val firstMessage = "firstMessage".encodeToByteArray()
+        val firstEncryptedMessage = doubleRatchet.encrypt(firstMessage)
+
+        val firstEncryptedMessageString = Json.stringify(MessageSerializer, firstEncryptedMessage)
+
+        println(firstEncryptedMessageString)
+    }
+
+    @ExperimentalStdlibApi
+    private fun testProcessFirstMessage() {
+        val ownKeyPairString = """{"secretKey":"326873752B2547AEB5C2A652FEDAC5EBFD652E0F944F0AF1E66C640985A627A9","publicKey":"D3A6E65CD63116F38C361F0CC857216E792552D740C79F603D23262C6DC20F56"}"""
+        val sharedSecretString = """1208db7dad21875cf6ba8c96f8fbfae00fb4c06ab3cbd1597b635c3989b1a67a"""
+        val firstEncryptedMessageString = """{"header":{"publicKey":"9258fd6cf6ee77f0518d91265438a02a60c71a449a56b9ce4ceec0015b17e35a","numberOfMessagesInPreviousSendingChain":0,"messageNumber":0},"cipher":"f685b57b98741d652e67a8d86df779dddbb9fcab9befa2ead084b00f906103d112b68dc3d53adaffaee22370ea50922bbb867d05"}"""
+
+        val sodium = LazySodiumAndroid(SodiumAndroid())
+
+        val ownKeyPair = Json.parse(KeyPairSerializer, ownKeyPairString)
+        val sharedSecret = sodium.sodiumHex2Bin(sharedSecretString)
+        val firstEncryptedMessage = Json.parse(MessageSerializer, firstEncryptedMessageString)
+
+        val doubleRatchet = DoubleRatchet(ownKeyPair, null, sharedSecret, 20, 20, "Info")
+
+        val decryptedMessage = doubleRatchet.decrypt(firstEncryptedMessage)
+
+        if (sodium.str(decryptedMessage) != "firstMessage") {
+            throw Exception("Test failed")
+        }
+    }
+
+    object ByteArraySerializer: SerializationStrategy<ByteArray>, DeserializationStrategy<ByteArray> {
+        override val descriptor: SerialDescriptor = PrimitiveDescriptor("ByteArrayHex", PrimitiveKind.STRING)
+        override fun serialize(encoder: Encoder, value: ByteArray) = encoder.encodeString(LazySodiumAndroid(SodiumAndroid()).sodiumBin2Hex(value))
+        override fun deserialize(decoder: Decoder): ByteArray = LazySodiumAndroid(SodiumAndroid()).sodiumHex2Bin(decoder.decodeString())
+        override fun patch(decoder: Decoder, old: ByteArray): ByteArray = deserialize(decoder)
+    }
+
+    object KeySerializer: SerializationStrategy<Key>, DeserializationStrategy<Key> {
+        override val descriptor: SerialDescriptor = PrimitiveDescriptor("Key", PrimitiveKind.STRING)
+        override fun serialize(encoder: Encoder, value: Key) {
+            encoder.encodeString(value.asHexString)
+        }
+
+        override fun deserialize(decoder: Decoder): Key = Key.fromHexString(decoder.decodeString())
+        override fun patch(decoder: Decoder, old: Key): Key = deserialize(decoder)
+    }
+
+    object KeyPairSerializer: SerializationStrategy<KeyPair>, DeserializationStrategy<KeyPair> {
+        @ImplicitReflectionSerializer
+        override val descriptor: SerialDescriptor = SerialDescriptor("KeyPair") {
+            element<String>("secretKey")
+            element<String>("publicKey")
+        }
+        @ImplicitReflectionSerializer
+        override fun serialize(encoder: Encoder, value: KeyPair) {
+            val composite = encoder.beginStructure(descriptor)
+            composite.encodeSerializableElement(descriptor, 0, KeySerializer, value.secretKey)
+            composite.encodeSerializableElement(descriptor, 1, KeySerializer, value.publicKey)
+            composite.endStructure(descriptor)
+        }
+
+        @ImplicitReflectionSerializer
+        override fun deserialize(decoder: Decoder): KeyPair {
+            val composite = decoder.beginStructure(descriptor)
+            var index = composite.decodeElementIndex(descriptor)
+            val secretKey = composite.decodeSerializableElement(descriptor, 0, KeySerializer)
+            index = composite.decodeElementIndex(descriptor)
+            val publicKey = composite.decodeSerializableElement(descriptor, 1, KeySerializer)
+            index = composite.decodeElementIndex(descriptor)
+            composite.endStructure(descriptor)
+
+            return KeyPair(publicKey, secretKey)
+        }
+        @ImplicitReflectionSerializer
+        override fun patch(decoder: Decoder, old: KeyPair): KeyPair = deserialize(decoder)
+    }
+
+    object HeaderSerializer: SerializationStrategy<Header>, DeserializationStrategy<Header> {
+        @ImplicitReflectionSerializer
+        override val descriptor: SerialDescriptor = SerialDescriptor("Header") {
+            element<String>("publicKey")
+            element<String>("numberOfMessagesInPreviousSendingChain")
+            element<String>("messageNumber")
+        }
+        @ImplicitReflectionSerializer
+        override fun serialize(encoder: Encoder, value: Header) {
+            val composite = encoder.beginStructure(descriptor)
+            composite.encodeSerializableElement(descriptor, 0, KeySerializer, value.publicKey)
+            composite.encodeIntElement(descriptor, 1, value.numberOfMessagesInPreviousSendingChain)
+            composite.encodeIntElement(descriptor, 2, value.messageNumber)
+            composite.endStructure(descriptor)
+        }
+
+        @ImplicitReflectionSerializer
+        override fun deserialize(decoder: Decoder): Header {
+            val composite = decoder.beginStructure(descriptor)
+            var index = composite.decodeElementIndex(descriptor)
+            val publicKey = composite.decodeSerializableElement(descriptor, 0, KeySerializer)
+            index = composite.decodeElementIndex(descriptor)
+            val numberOfMessagesInPreviousSendingChain = composite.decodeIntElement(descriptor, 1)
+            index = composite.decodeElementIndex(descriptor)
+            val messageNumber = composite.decodeIntElement(descriptor, 2)
+            index = composite.decodeElementIndex(descriptor)
+            composite.endStructure(descriptor)
+
+            return Header(publicKey, numberOfMessagesInPreviousSendingChain, messageNumber)
+        }
+        @ImplicitReflectionSerializer
+        override fun patch(decoder: Decoder, old: Header): Header = deserialize(decoder)
+    }
+
+    object MessageSerializer: SerializationStrategy<Message>, DeserializationStrategy<Message> {
+        @ImplicitReflectionSerializer
+        override val descriptor: SerialDescriptor = SerialDescriptor("Message") {
+            element<String>("header")
+            element<String>("cipher")
+        }
+        @ImplicitReflectionSerializer
+        override fun serialize(encoder: Encoder, value: Message) {
+            val composite = encoder.beginStructure(descriptor)
+            composite.encodeSerializableElement(descriptor, 0, HeaderSerializer, value.header)
+            composite.encodeSerializableElement(descriptor, 1, ByteArraySerializer, value.cipher)
+            composite.endStructure(descriptor)
+        }
+
+        @ImplicitReflectionSerializer
+        override fun deserialize(decoder: Decoder): Message {
+            val composite = decoder.beginStructure(descriptor)
+            var index = composite.decodeElementIndex(descriptor)
+            val header = composite.decodeSerializableElement(descriptor, 0, HeaderSerializer)
+            index = composite.decodeElementIndex(descriptor)
+            val cipher = composite.decodeSerializableElement(descriptor, 1, ByteArraySerializer)
+            index = composite.decodeElementIndex(descriptor)
+            composite.endStructure(descriptor)
+
+            return Message(header, cipher)
+        }
+        @ImplicitReflectionSerializer
+        override fun patch(decoder: Decoder, old: Message): Message = deserialize(decoder)
     }
 }
