@@ -83,9 +83,10 @@ class DoubleRatchet {
         associatedData?.let { headerData += it }
 
         val nonce = sodium.nonce(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES)
-        val cipherString = sodium.encrypt(sodium.str(plaintext), sodium.str(headerData), nonce, messageKey, AEAD.Method.XCHACHA20_POLY1305_IETF)
-        val nonceAndCipher = nonce + sodium.sodiumHex2Bin(cipherString)
+        val cipher = ByteArray(plaintext.size + AEAD.XCHACHA20POLY1305_IETF_ABYTES)
+        sodium.cryptoAeadXChaCha20Poly1305IetfEncrypt(cipher, null, plaintext, plaintext.size.toLong(), headerData, headerData.size.toLong(), null, nonce, messageKey.asBytes)
 
+        val nonceAndCipher = nonce + cipher
         return Message(header, nonceAndCipher)
     }
 
@@ -121,8 +122,10 @@ class DoubleRatchet {
         val nonce = message.cipher.sliceArray(0 until AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES)
         val cipher = message.cipher.sliceArray(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES until message.cipher.size)
 
-        val plaintext = sodium.decrypt(sodium.sodiumBin2Hex(cipher), sodium.str(headerData), nonce, key, AEAD.Method.XCHACHA20_POLY1305_IETF)
-        return sodium.bytes(plaintext)
+        val plaintextLength = cipher.size - AEAD.XCHACHA20POLY1305_IETF_ABYTES
+        val plaintext = ByteArray(plaintextLength)
+        sodium.cryptoAeadXChaCha20Poly1305IetfDecrypt(plaintext, null, null, cipher, cipher.size.toLong(), headerData, headerData.size.toLong(), nonce, key.asBytes)
+        return plaintext
     }
 
     @ExperimentalStdlibApi
