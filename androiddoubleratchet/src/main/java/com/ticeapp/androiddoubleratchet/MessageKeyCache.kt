@@ -1,6 +1,7 @@
 package com.ticeapp.androiddoubleratchet
 
 import com.goterl.lazycode.lazysodium.utils.Key
+import kotlinx.serialization.*
 
 internal class MessageKeyCache {
     data class MessageIndex(val publicKey: Key, val messageNumber: Int)
@@ -49,4 +50,13 @@ internal class MessageKeyCache {
 }
 
 typealias MessageKeyCacheState = ArrayList<MessageKeyCacheEntry>
-data class MessageKeyCacheEntry(val publicKey: Key, val messageNumber: Int, val messageKey: Key)
+
+@Serializable
+data class MessageKeyCacheEntry(@Serializable(with = KeySerializer::class) val publicKey: Key, val messageNumber: Int, @Serializable(with = KeySerializer::class) val messageKey: Key)
+
+class KeySerializer: KSerializer<Key> { //SerializationStrategy<Key>, DeserializationStrategy<Key> {
+    override val descriptor: SerialDescriptor = PrimitiveDescriptor("Key", PrimitiveKind.STRING)
+    override fun serialize(encoder: Encoder, value: Key) = encoder.encodeString(value.asHexString)
+    override fun deserialize(decoder: Decoder): Key = Key.fromHexString(decoder.decodeString())
+    override fun patch(decoder: Decoder, old: Key): Key = deserialize(decoder)
+}

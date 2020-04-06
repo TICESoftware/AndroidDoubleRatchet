@@ -1,6 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlinx-serialization'
+apply plugin: 'maven-publish'
+
+def artifactId = 'AndroidDoubleRatchet'
+def groupId = 'com.ticeapp.androiddoubleratchet'
 
 android {
     compileSdkVersion 29
@@ -10,7 +15,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -36,4 +41,20 @@ dependencies {
     implementation "com.goterl.lazycode:lazysodium-android:4.1.0@aar"
     implementation 'net.java.dev.jna:jna:5.5.0@aar'
     implementation 'com.github.TICESoftware:AndroidHKDF:1.0.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
+}
+
+project.afterEvaluate {
+    publishing {
+        publications {
+            library(MavenPublication) {
+                setGroupId groupId
+                setArtifactId artifactId
+                version android.defaultConfig.versionName
+
+                artifact bundleReleaseAar
+            }
+        }
+    }
 }
