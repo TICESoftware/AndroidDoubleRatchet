@@ -1,5 +1,6 @@
 package com.ticeapp.androiddoubleratchet
 
+import android.util.Base64
 import com.goterl.lazycode.lazysodium.utils.Key
 import kotlinx.serialization.*
 
@@ -56,7 +57,7 @@ data class MessageKeyCacheEntry(@Serializable(with = KeySerializer::class) val p
 
 class KeySerializer: KSerializer<Key> { //SerializationStrategy<Key>, DeserializationStrategy<Key> {
     override val descriptor: SerialDescriptor = PrimitiveDescriptor("Key", PrimitiveKind.STRING)
-    override fun serialize(encoder: Encoder, value: Key) = encoder.encodeString(value.asHexString)
-    override fun deserialize(decoder: Decoder): Key = Key.fromHexString(decoder.decodeString())
+    override fun serialize(encoder: Encoder, value: Key) = encoder.encodeString(Base64.encodeToString(value.asBytes, Base64.DEFAULT))
+    override fun deserialize(decoder: Decoder): Key = Key.fromBase64String(decoder.decodeString())
     override fun patch(decoder: Decoder, old: Key): Key = deserialize(decoder)
 }
