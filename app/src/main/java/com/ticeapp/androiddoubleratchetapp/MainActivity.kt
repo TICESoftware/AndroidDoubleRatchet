@@ -236,8 +236,8 @@ class MainActivity : AppCompatActivity() {
 
         val message = "aliceToBob".encodeToByteArray()
         val associatedData = "AD".encodeToByteArray()
-        val encryptedMessage = alice.encrypt(message, associatedData)
-        val decryptedMessage = bob.decrypt(encryptedMessage, associatedData)
+        val encryptedMessage = alice.encrypt(message, associatedData.toUByteArray())
+        val decryptedMessage = bob.decrypt(encryptedMessage, associatedData.toUByteArray())
 
         if (!decryptedMessage.contentEquals(message)) {
             throw Exception("Test failed")
@@ -281,7 +281,7 @@ class MainActivity : AppCompatActivity() {
         val pubKey = Key.fromHexString("0efd0d78c9ba26b39588848ddf69b02807fb85916c2b004d7af759f932544443")
         val header = Header(pubKey, 123456789, 987654321)
 
-        val headerBytesAre = header.bytes()
+        val headerBytesAre = header.bytes().toByteArray()
         val headerBytesShouldBe = sodium.sodiumHex2Bin("0efd0d78c9ba26b39588848ddf69b02807fb85916c2b004d7af759f93254444300000000075bcd15000000003ade68b1")
 
         if (!headerBytesShouldBe.contentEquals(headerBytesAre)) {

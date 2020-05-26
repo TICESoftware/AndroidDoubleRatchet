@@ -73,25 +73,27 @@ class DoubleRatchet {
         this.messageKeyCache = MessageKeyCache(sessionState.maxCache, sessionState.messageKeyCacheState)
     }
 
-    fun encrypt(plaintext: ByteArray, associatedData: ByteArray? = null): Message {
+    @ExperimentalUnsignedTypes
+    fun encrypt(plaintext: ByteArray, associatedData: UByteArray? = null): Message {
         val messageKey = sendingChain.nextMessageKey()
         val header = Header(rootChain.keyPair.publicKey, previousSendingChainLength, sendMessageNumber)
 
         sendMessageNumber++
 
-        var headerData = header.bytes()
-        associatedData?.let { headerData += it }
+        var headerData = header.bytes().toByteArray()
+        associatedData?.let { headerData += it.toByteArray() }
 
         val nonce = sodium.nonce(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES)
         val cipher = ByteArray(plaintext.size + AEAD.XCHACHA20POLY1305_IETF_ABYTES)
         sodium.cryptoAeadXChaCha20Poly1305IetfEncrypt(cipher, null, plaintext, plaintext.size.toLong(), headerData, headerData.size.toLong(), null, nonce, messageKey.asBytes)
 
         val nonceAndCipher = nonce + cipher
-        return Message(header, nonceAndCipher)
+        return Message(header, nonceAndCipher.toUByteArray())
     }
 
+    @ExperimentalUnsignedTypes
     @ExperimentalStdlibApi
-    fun decrypt(message: Message, associatedData: ByteArray? = null): ByteArray {
+    fun decrypt(message: Message, associatedData: UByteArray? = null): ByteArray {
         messageKeyCache.getMessageKey(message.header.messageNumber, message.header.publicKey)?.let {
             return decrypt(message, it, associatedData)
         }
@@ -115,12 +117,13 @@ class DoubleRatchet {
         return plaintext
     }
 
-    private fun decrypt(message: Message, key: Key, associatedData: ByteArray?): ByteArray {
-        var headerData = message.header.bytes()
-        associatedData?.let { headerData += it}
+    @ExperimentalUnsignedTypes
+    private fun decrypt(message: Message, key: Key, associatedData: UByteArray?): ByteArray {
+        var headerData = message.header.bytes().toByteArray()
+        associatedData?.let { headerData += it.toByteArray()}
 
-        val nonce = message.cipher.sliceArray(0 until AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES)
-        val cipher = message.cipher.sliceArray(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES until message.cipher.size)
+        val nonce = message.cipher.sliceArray(0 until AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES).toByteArray()
+        val cipher = message.cipher.sliceArray(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES until message.cipher.size).toByteArray()
 
         val plaintextLength = cipher.size - AEAD.XCHACHA20POLY1305_IETF_ABYTES
         val plaintext = ByteArray(plaintextLength)
