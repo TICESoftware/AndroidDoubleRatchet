@@ -3,7 +3,7 @@ package com.ticeapp.androiddoubleratchet
 import com.goterl.lazycode.lazysodium.utils.Key
 import java.math.BigInteger
 
-class Message @ExperimentalUnsignedTypes constructor(val header: Header, val cipher: UByteArray)
+class Message @ExperimentalUnsignedTypes constructor(val header: Header, val cipher: ByteArray)
 class Header(val publicKey: Key, val numberOfMessagesInPreviousSendingChain: Int, val messageNumber: Int) {
     @ExperimentalUnsignedTypes
     fun bytes(): UByteArray {

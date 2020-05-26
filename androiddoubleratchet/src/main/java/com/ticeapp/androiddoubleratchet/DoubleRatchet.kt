@@ -74,26 +74,26 @@ class DoubleRatchet {
     }
 
     @ExperimentalUnsignedTypes
-    fun encrypt(plaintext: ByteArray, associatedData: UByteArray? = null): Message {
+    fun encrypt(plaintext: ByteArray, associatedData: ByteArray? = null): Message {
         val messageKey = sendingChain.nextMessageKey()
         val header = Header(rootChain.keyPair.publicKey, previousSendingChainLength, sendMessageNumber)
 
         sendMessageNumber++
 
-        var headerData = header.bytes().toByteArray()
-        associatedData?.let { headerData += it.toByteArray() }
+        var headerData = header.bytes().asByteArray()
+        associatedData?.let { headerData += it }
 
         val nonce = sodium.nonce(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES)
         val cipher = ByteArray(plaintext.size + AEAD.XCHACHA20POLY1305_IETF_ABYTES)
         sodium.cryptoAeadXChaCha20Poly1305IetfEncrypt(cipher, null, plaintext, plaintext.size.toLong(), headerData, headerData.size.toLong(), null, nonce, messageKey.asBytes)
 
         val nonceAndCipher = nonce + cipher
-        return Message(header, nonceAndCipher.toUByteArray())
+        return Message(header, nonceAndCipher)
     }
 
     @ExperimentalUnsignedTypes
     @ExperimentalStdlibApi
-    fun decrypt(message: Message, associatedData: UByteArray? = null): ByteArray {
+    fun decrypt(message: Message, associatedData: ByteArray? = null): ByteArray {
         messageKeyCache.getMessageKey(message.header.messageNumber, message.header.publicKey)?.let {
             return decrypt(message, it, associatedData)
         }
@@ -118,12 +118,12 @@ class DoubleRatchet {
     }
 
     @ExperimentalUnsignedTypes
-    private fun decrypt(message: Message, key: Key, associatedData: UByteArray?): ByteArray {
+    private fun decrypt(message: Message, key: Key, associatedData: ByteArray?): ByteArray {
         var headerData = message.header.bytes().toByteArray()
-        associatedData?.let { headerData += it.toByteArray()}
+        associatedData?.let { headerData += it }
 
-        val nonce = message.cipher.sliceArray(0 until AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES).toByteArray()
-        val cipher = message.cipher.sliceArray(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES until message.cipher.size).toByteArray()
+        val nonce = message.cipher.sliceArray(0 until AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES)
+        val cipher = message.cipher.sliceArray(AEAD.XCHACHA20POLY1305_IETF_NPUBBYTES until message.cipher.size)
 
         val plaintextLength = cipher.size - AEAD.XCHACHA20POLY1305_IETF_ABYTES
         val plaintext = ByteArray(plaintextLength)

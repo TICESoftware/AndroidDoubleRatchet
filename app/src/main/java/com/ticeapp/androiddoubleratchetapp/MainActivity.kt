@@ -236,8 +236,8 @@ class MainActivity : AppCompatActivity() {
 
         val message = "aliceToBob".encodeToByteArray()
         val associatedData = "AD".encodeToByteArray()
-        val encryptedMessage = alice.encrypt(message, associatedData.toUByteArray())
-        val decryptedMessage = bob.decrypt(encryptedMessage, associatedData.toUByteArray())
+        val encryptedMessage = alice.encrypt(message, associatedData)
+        val decryptedMessage = bob.decrypt(encryptedMessage, associatedData)
 
         if (!decryptedMessage.contentEquals(message)) {
             throw Exception("Test failed")
