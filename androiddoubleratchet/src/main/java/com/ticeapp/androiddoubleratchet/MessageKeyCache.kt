@@ -9,11 +9,11 @@ internal class MessageKeyCache {
 
     internal val maxCache: Int
     private var skippedMessageKeys: HashMap<MessageIndex, Key>
-    private var messageKeyCache: ArrayList<MessageIndex>
+    private var messageKeyCache: MutableList<MessageIndex>
 
     val cacheState: MessageKeyCacheState
         get() {
-            return ArrayList(messageKeyCache.map { MessageKeyCacheEntry(it.publicKey, it.messageNumber, skippedMessageKeys[it]!!) })
+            return messageKeyCache.map { MessageKeyCacheEntry(it.publicKey, it.messageNumber, skippedMessageKeys[it]!!) }
         }
 
     @ExperimentalStdlibApi
@@ -50,7 +50,7 @@ internal class MessageKeyCache {
     }
 }
 
-typealias MessageKeyCacheState = ArrayList<MessageKeyCacheEntry>
+typealias MessageKeyCacheState = List<MessageKeyCacheEntry>
 
 @Serializable
 data class MessageKeyCacheEntry(@Serializable(with = KeySerializer::class) val publicKey: Key, val messageNumber: Int, @Serializable(with = KeySerializer::class) val messageKey: Key)
