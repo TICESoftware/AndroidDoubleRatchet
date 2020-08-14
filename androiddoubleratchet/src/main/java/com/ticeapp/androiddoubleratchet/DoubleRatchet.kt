@@ -46,9 +46,9 @@ class DoubleRatchet {
         val keyPair = keyPair ?: sodium.cryptoKxKeypair()
 
         this.maxSkip = maxSkip
-        this.rootChain = RootChain(keyPair, remotePublicKey, rootKey = Key.fromBytes(sharedSecret), info = info)
-        this.sendingChain = MessageChain()
-        this.receivingChain = MessageChain()
+        this.rootChain = RootChain(keyPair, remotePublicKey, rootKey = Key.fromBytes(sharedSecret), info = info, sodium = sodium)
+        this.sendingChain = MessageChain(sodium = sodium)
+        this.receivingChain = MessageChain(sodium = sodium)
 
         this.sendMessageNumber = 0
         this.receivedMessageNumber = 0
@@ -64,9 +64,9 @@ class DoubleRatchet {
     constructor(sessionState: SessionState) {
         this.maxSkip = sessionState.maxSkip
 
-        this.rootChain = RootChain(sessionState.rootChainKeyPair, sessionState.rootChainRemotePublicKey, sessionState.rootKey, sessionState.info)
-        this.sendingChain = MessageChain(sessionState.sendingChainKey)
-        this.receivingChain = MessageChain(sessionState.receivingChainKey)
+        this.rootChain = RootChain(sessionState.rootChainKeyPair, sessionState.rootChainRemotePublicKey, sessionState.rootKey, sessionState.info, sodium = sodium)
+        this.sendingChain = MessageChain(sessionState.sendingChainKey, sodium = sodium)
+        this.receivingChain = MessageChain(sessionState.receivingChainKey, sodium = sodium)
         this.sendMessageNumber = sessionState.sendMessageNumber
         this.receivedMessageNumber = sessionState.receivedMessageNumber
         this.previousSendingChainLength = sessionState.previousSendingChainLength
