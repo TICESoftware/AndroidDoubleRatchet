@@ -58,6 +58,6 @@ data class MessageKeyCacheEntry(@Serializable(with = KeySerializer::class) val p
 class KeySerializer: KSerializer<Key> {
     override val descriptor: SerialDescriptor = PrimitiveDescriptor("Key", PrimitiveKind.STRING)
     override fun serialize(encoder: Encoder, value: Key) = encoder.encodeString(Base64.encodeToString(value.asBytes, Base64.NO_WRAP))
-    override fun deserialize(decoder: Decoder): Key = Key.fromBase64String(decoder.decodeString())
+    override fun deserialize(decoder: Decoder): Key = Key.fromBytes(Base64Coder.decode(decoder.decodeString()))
     override fun patch(decoder: Decoder, old: Key): Key = deserialize(decoder)
 }
