@@ -36,7 +36,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation "com.goterl.lazycode:lazysodium-android:4.1.1@aar"
     implementation 'net.java.dev.jna:jna:5.5.0@aar'
-    implementation 'com.github.TICESoftware:AndroidHKDF:1.0.0'
+    implementation 'com.github.TICESoftware:AndroidHKDF:1.1.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
 }
