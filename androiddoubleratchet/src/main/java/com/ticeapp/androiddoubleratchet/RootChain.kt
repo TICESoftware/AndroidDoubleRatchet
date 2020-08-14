@@ -1,9 +1,6 @@
 package com.ticeapp.androiddoubleratchet
 
-import android.util.Base64
 import com.goterl.lazycode.lazysodium.LazySodiumAndroid
-import com.goterl.lazycode.lazysodium.SodiumAndroid
-import com.goterl.lazycode.lazysodium.interfaces.KeyExchange
 import com.goterl.lazycode.lazysodium.utils.Key
 import com.goterl.lazycode.lazysodium.utils.KeyPair
 import com.ticeapp.androidhkdf.deriveHKDFKey

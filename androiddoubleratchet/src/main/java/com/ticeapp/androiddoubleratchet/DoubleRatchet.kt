@@ -43,7 +43,7 @@ class DoubleRatchet {
     constructor(keyPair: KeyPair?, remotePublicKey: Key?, sharedSecret: ByteArray, maxSkip: Int, maxCache: Int, info: String, sodium: LazySodiumAndroid?) {
         require(sharedSecret.size == 32)
 
-        this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid())
+        this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid(), Base64Coder)
 
         val keyPair = keyPair ?: this.sodium.cryptoKxKeypair()
 
@@ -64,7 +64,7 @@ class DoubleRatchet {
 
     @ExperimentalStdlibApi
     constructor(sessionState: SessionState, sodium: LazySodiumAndroid?) {
-        this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid())
+        this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid(), Base64Coder)
 
         this.maxSkip = sessionState.maxSkip
 
