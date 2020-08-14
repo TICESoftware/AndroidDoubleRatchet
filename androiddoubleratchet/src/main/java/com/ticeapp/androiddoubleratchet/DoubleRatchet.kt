@@ -7,7 +7,7 @@ import com.goterl.lazycode.lazysodium.utils.Key
 import com.goterl.lazycode.lazysodium.utils.KeyPair
 
 class DoubleRatchet {
-    private val sodium = LazySodiumAndroid(SodiumAndroid())
+    private val sodium: LazySodiumAndroid
 
     val maxSkip: Int
 
@@ -40,15 +40,17 @@ class DoubleRatchet {
         )
 
     @ExperimentalStdlibApi
-    constructor(keyPair: KeyPair?, remotePublicKey: Key?, sharedSecret: ByteArray, maxSkip: Int, maxCache: Int, info: String) {
+    constructor(keyPair: KeyPair?, remotePublicKey: Key?, sharedSecret: ByteArray, maxSkip: Int, maxCache: Int, info: String, sodium: LazySodiumAndroid?) {
         require(sharedSecret.size == 32)
 
-        val keyPair = keyPair ?: sodium.cryptoKxKeypair()
+        this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid())
+
+        val keyPair = keyPair ?: this.sodium.cryptoKxKeypair()
 
         this.maxSkip = maxSkip
-        this.rootChain = RootChain(keyPair, remotePublicKey, rootKey = Key.fromBytes(sharedSecret), info = info, sodium = sodium)
-        this.sendingChain = MessageChain(sodium = sodium)
-        this.receivingChain = MessageChain(sodium = sodium)
+        this.rootChain = RootChain(keyPair, remotePublicKey, rootKey = Key.fromBytes(sharedSecret), info = info, sodium = this.sodium)
+        this.sendingChain = MessageChain(sodium = this.sodium)
+        this.receivingChain = MessageChain(sodium = this.sodium)
 
         this.sendMessageNumber = 0
         this.receivedMessageNumber = 0
@@ -61,12 +63,14 @@ class DoubleRatchet {
     }
 
     @ExperimentalStdlibApi
-    constructor(sessionState: SessionState) {
+    constructor(sessionState: SessionState, sodium: LazySodiumAndroid?) {
+        this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid())
+
         this.maxSkip = sessionState.maxSkip
 
-        this.rootChain = RootChain(sessionState.rootChainKeyPair, sessionState.rootChainRemotePublicKey, sessionState.rootKey, sessionState.info, sodium = sodium)
-        this.sendingChain = MessageChain(sessionState.sendingChainKey, sodium = sodium)
-        this.receivingChain = MessageChain(sessionState.receivingChainKey, sodium = sodium)
+        this.rootChain = RootChain(sessionState.rootChainKeyPair, sessionState.rootChainRemotePublicKey, sessionState.rootKey, sessionState.info, sodium = this.sodium)
+        this.sendingChain = MessageChain(sessionState.sendingChainKey, sodium = this.sodium)
+        this.receivingChain = MessageChain(sessionState.receivingChainKey, sodium = this.sodium)
         this.sendMessageNumber = sessionState.sendMessageNumber
         this.receivedMessageNumber = sessionState.receivedMessageNumber
         this.previousSendingChainLength = sessionState.previousSendingChainLength

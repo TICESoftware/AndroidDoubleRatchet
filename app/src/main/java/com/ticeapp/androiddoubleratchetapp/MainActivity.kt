@@ -40,8 +40,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
 
         val bobPublicKeySnapshot = bob.publicKey
 
@@ -73,8 +73,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
 
         val alicePublicKeySnapshot = alice.publicKey
 
@@ -100,8 +100,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
 
         val delayedMessages: MutableList<Message> = mutableListOf()
 
@@ -127,8 +127,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
 
         val message = "aliceToBob".encodeToByteArray()
 
@@ -171,8 +171,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 1, 2, info)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 1, 2, info)
+        val bob = DoubleRatchet(null, null, sharedSecret, 1, 2, info, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 1, 2, info, null)
 
         for (i in 0..1) {
             alice.encrypt("Message".encodeToByteArray())
@@ -196,8 +196,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 1, info)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 1, info)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, 1, info, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 1, info, null)
 
         val delayedMessages: MutableList<Message> = mutableListOf()
 
@@ -231,8 +231,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
 
         val message = "aliceToBob".encodeToByteArray()
         val associatedData = "AD".encodeToByteArray()
@@ -251,15 +251,15 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        var bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info)
-        var alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info)
+        var bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
+        var alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
 
         val message = "aliceToBob".encodeToByteArray()
         val encryptedMessage = alice.encrypt(message)
         val decryptedMessage = bob.decrypt(encryptedMessage)
 
-        bob = DoubleRatchet(bob.sessionState)
-        alice = DoubleRatchet(alice.sessionState)
+        bob = DoubleRatchet(bob.sessionState, null)
+        alice = DoubleRatchet(alice.sessionState, null)
 
         val messageAliceToBob = "aliceToBob".encodeToByteArray()
         val encryptedMessageAliceToBob = alice.encrypt(messageAliceToBob)
