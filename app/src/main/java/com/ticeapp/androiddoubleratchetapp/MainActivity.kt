@@ -5,10 +5,7 @@ import android.os.Bundle
 import com.goterl.lazycode.lazysodium.LazySodiumAndroid
 import com.goterl.lazycode.lazysodium.SodiumAndroid
 import com.goterl.lazycode.lazysodium.utils.Key
-import com.ticeapp.androiddoubleratchet.DRError
-import com.ticeapp.androiddoubleratchet.DoubleRatchet
-import com.ticeapp.androiddoubleratchet.Header
-import com.ticeapp.androiddoubleratchet.Message
+import com.ticeapp.androiddoubleratchet.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,7 +24,6 @@ class MainActivity : AppCompatActivity() {
         testLostMessages()
         testLostMessagesAndRatchetStep()
         testExceedMaxSkipMessages()
-        testExceedMaxCacheMessageKeys()
         testEncryptAssociatedData()
         testReinitializeSession()
         testMessageHeaderEncoding()
@@ -40,8 +36,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, info, null, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, info, null, null)
 
         val bobPublicKeySnapshot = bob.publicKey
 
@@ -73,8 +69,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, info, null, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, info, null, null)
 
         val alicePublicKeySnapshot = alice.publicKey
 
@@ -100,8 +96,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, info, Cache(), null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, info, null, null)
 
         val delayedMessages: MutableList<Message> = mutableListOf()
 
@@ -127,8 +123,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, info, Cache(), null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, info, null, null)
 
         val message = "aliceToBob".encodeToByteArray()
 
@@ -171,8 +167,8 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 1, 2, info, null)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 1, 2, info, null)
+        val bob = DoubleRatchet(null, null, sharedSecret, 1, info, null, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 1, info, null, null)
 
         for (i in 0..1) {
             alice.encrypt("Message".encodeToByteArray())
@@ -190,49 +186,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testExceedMaxCacheMessageKeys() {
-        val sodium = LazySodiumAndroid(SodiumAndroid())
-
-        val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
-        val info = "DoubleRatchetTest"
-
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 1, info, null)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 1, info, null)
-
-        val delayedMessages: MutableList<Message> = mutableListOf()
-
-        for (i in 0..2) {
-            val message = "aliceToBob $i".encodeToByteArray()
-            val encryptedMessage = alice.encrypt(message)
-            delayedMessages.add(encryptedMessage)
-        }
-
-        for (i in 2 downTo 1) {
-            val plaintext = bob.decrypt(delayedMessages[i])
-
-            if (!plaintext.contentEquals("aliceToBob $i".encodeToByteArray())) {
-                throw Exception("Test failed")
-            }
-        }
-
-        try {
-            bob.decrypt(delayedMessages[0])
-        } catch (e: DRError.DiscardOldMessageException) {
-            return
-        }
-
-        throw Exception("Test failed")
-    }
-
-    @ExperimentalStdlibApi
     private fun testEncryptAssociatedData() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        val bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
-        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
+        val bob = DoubleRatchet(null, null, sharedSecret, 20, info, null, null)
+        val alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, info, null, null)
 
         val message = "aliceToBob".encodeToByteArray()
         val associatedData = "AD".encodeToByteArray()
@@ -251,15 +212,15 @@ class MainActivity : AppCompatActivity() {
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
         val info = "DoubleRatchetTest"
 
-        var bob = DoubleRatchet(null, null, sharedSecret, 20, 20, info, null)
-        var alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, 20, info, null)
+        var bob = DoubleRatchet(null, null, sharedSecret, 20, info, null, null)
+        var alice = DoubleRatchet(null, bob.publicKey, sharedSecret, 20, info, null, null)
 
         val message = "aliceToBob".encodeToByteArray()
         val encryptedMessage = alice.encrypt(message)
         val decryptedMessage = bob.decrypt(encryptedMessage)
 
-        bob = DoubleRatchet(bob.sessionState, null)
-        alice = DoubleRatchet(alice.sessionState, null)
+        bob = DoubleRatchet(bob.sessionState, null, null)
+        alice = DoubleRatchet(alice.sessionState, null, null)
 
         val messageAliceToBob = "aliceToBob".encodeToByteArray()
         val encryptedMessageAliceToBob = alice.encrypt(messageAliceToBob)
@@ -287,5 +248,21 @@ class MainActivity : AppCompatActivity() {
         if (!headerBytesShouldBe.contentEquals(headerBytesAre)) {
             throw Exception("Test failed")
         }
+    }
+}
+
+class Cache: MessageKeyCache {
+    data class MapKey(val messageNumber: Int, val publicKey: Key)
+    private val cachedKeys: MutableMap<MapKey, Key> = mutableMapOf<MapKey, Key>()
+
+    override fun add(messageKey: Key, messageNumber: Int, publicKey: Key) {
+        cachedKeys[MapKey(messageNumber, publicKey)] = messageKey
+    }
+
+    override fun getMessageKey(messageNumber: Int, publicKey: Key): Key? =
+        cachedKeys[MapKey(messageNumber, publicKey)]
+
+    override fun remove(publicKey: Key, messageNumber: Int) {
+        cachedKeys.remove(MapKey(messageNumber, publicKey))
     }
 }

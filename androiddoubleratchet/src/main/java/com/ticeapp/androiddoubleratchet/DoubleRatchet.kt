@@ -18,7 +18,7 @@ class DoubleRatchet {
     private var sendMessageNumber: Int
     private var receivedMessageNumber: Int
     private var previousSendingChainLength: Int
-    private val messageKeyCache: MessageKeyCache
+    private val messageKeyCache: MessageKeyCache?
 
     val publicKey: Key
         get () = rootChain.keyPair.publicKey
@@ -33,14 +33,12 @@ class DoubleRatchet {
             sendMessageNumber,
             receivedMessageNumber,
             previousSendingChainLength,
-            messageKeyCache.cacheState,
             rootChain.info,
             maxSkip,
-            messageKeyCache.maxCache
         )
 
     @ExperimentalStdlibApi
-    constructor(keyPair: KeyPair?, remotePublicKey: Key?, sharedSecret: ByteArray, maxSkip: Int, maxCache: Int, info: String, sodium: LazySodiumAndroid?) {
+    constructor(keyPair: KeyPair?, remotePublicKey: Key?, sharedSecret: ByteArray, maxSkip: Int, info: String, messageKeyCache: MessageKeyCache?, sodium: LazySodiumAndroid?) {
         require(sharedSecret.size == 32)
 
         this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid(), Base64Coder)
@@ -55,7 +53,7 @@ class DoubleRatchet {
         this.sendMessageNumber = 0
         this.receivedMessageNumber = 0
         this.previousSendingChainLength = 0
-        this.messageKeyCache = MessageKeyCache(maxCache)
+        this.messageKeyCache = messageKeyCache
 
         if (remotePublicKey != null) {
             sendingChain.chainKey = rootChain.ratchetStep(Side.SENDING)
@@ -63,7 +61,7 @@ class DoubleRatchet {
     }
 
     @ExperimentalStdlibApi
-    constructor(sessionState: SessionState, sodium: LazySodiumAndroid?) {
+    constructor(sessionState: SessionState, messageKeyCache: MessageKeyCache?, sodium: LazySodiumAndroid?) {
         this.sodium = sodium ?: LazySodiumAndroid(SodiumAndroid(), Base64Coder)
 
         this.maxSkip = sessionState.maxSkip
@@ -74,7 +72,7 @@ class DoubleRatchet {
         this.sendMessageNumber = sessionState.sendMessageNumber
         this.receivedMessageNumber = sessionState.receivedMessageNumber
         this.previousSendingChainLength = sessionState.previousSendingChainLength
-        this.messageKeyCache = MessageKeyCache(sessionState.maxCache, sessionState.messageKeyCacheState)
+        this.messageKeyCache = messageKeyCache
     }
 
     @ExperimentalUnsignedTypes
@@ -98,7 +96,7 @@ class DoubleRatchet {
     @ExperimentalUnsignedTypes
     @ExperimentalStdlibApi
     fun decrypt(message: Message, associatedData: ByteArray? = null): ByteArray {
-        messageKeyCache.getMessageKey(message.header.messageNumber, message.header.publicKey)?.let {
+        messageKeyCache?.getMessageKey(message.header.messageNumber, message.header.publicKey)?.let {
             return decrypt(message, it, associatedData)
         }
 
@@ -143,7 +141,7 @@ class DoubleRatchet {
 
         while (receivedMessageNumber < nextMessageNumber) {
             val skippedMessageKey = receivingChain.nextMessageKey()
-            messageKeyCache.add(skippedMessageKey, receivedMessageNumber, remotePublicKey)
+            messageKeyCache?.add(skippedMessageKey, receivedMessageNumber, remotePublicKey)
             receivedMessageNumber++
         }
     }
