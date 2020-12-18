@@ -6,6 +6,8 @@ import com.goterl.lazycode.lazysodium.LazySodiumAndroid
 import com.goterl.lazycode.lazysodium.SodiumAndroid
 import com.goterl.lazycode.lazysodium.utils.Key
 import com.ticeapp.androiddoubleratchet.*
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -14,11 +16,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        testLibrary()
+        runBlocking { testLibrary() }
     }
 
     @ExperimentalStdlibApi
-    private fun testLibrary() {
+    private suspend fun testLibrary() {
         testRatchetSteps()
         testUnidirectionalConversation()
         testLostMessages()
@@ -30,7 +32,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testRatchetSteps() {
+    private suspend fun testRatchetSteps() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
         val message = "aliceToBob".encodeToByteArray()
         val encryptedMessage = alice.encrypt(message)
+
         val decryptedMessage = bob.decrypt(encryptedMessage)
 
         if (!decryptedMessage.contentEquals(message) ||
@@ -63,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testUnidirectionalConversation() {
+    private suspend fun testUnidirectionalConversation() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
@@ -90,7 +93,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testLostMessages() {
+    private suspend fun testLostMessages() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
@@ -117,7 +120,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testLostMessagesAndRatchetStep() {
+    private suspend fun testLostMessagesAndRatchetStep() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
@@ -161,7 +164,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testExceedMaxSkipMessages() {
+    private suspend fun testExceedMaxSkipMessages() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
@@ -186,7 +189,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testEncryptAssociatedData() {
+    private suspend fun testEncryptAssociatedData() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
@@ -206,7 +209,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @ExperimentalStdlibApi
-    private fun testReinitializeSession() {
+    private suspend fun testReinitializeSession() {
         val sodium = LazySodiumAndroid(SodiumAndroid())
 
         val sharedSecret = sodium.sodiumHex2Bin("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF")
@@ -255,14 +258,14 @@ class Cache: MessageKeyCache {
     data class MapKey(val messageNumber: Int, val publicKey: ByteArray)
     private val cachedKeys: MutableMap<MapKey, ByteArray> = mutableMapOf<MapKey, ByteArray>()
 
-    override fun add(messageKey: ByteArray, messageNumber: Int, publicKey: ByteArray) {
+    override suspend fun add(messageKey: ByteArray, messageNumber: Int, publicKey: ByteArray) {
         cachedKeys[MapKey(messageNumber, publicKey)] = messageKey
     }
 
-    override fun getMessageKey(messageNumber: Int, publicKey: ByteArray): ByteArray? =
+    override suspend fun getMessageKey(messageNumber: Int, publicKey: ByteArray): ByteArray? =
         cachedKeys[MapKey(messageNumber, publicKey)]
 
-    override fun remove(publicKey: ByteArray, messageNumber: Int) {
+    override suspend fun remove(publicKey: ByteArray, messageNumber: Int) {
         cachedKeys.remove(MapKey(messageNumber, publicKey))
     }
 }

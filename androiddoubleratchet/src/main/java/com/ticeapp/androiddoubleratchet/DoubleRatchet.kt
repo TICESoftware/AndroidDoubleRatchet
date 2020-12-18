@@ -95,7 +95,7 @@ class DoubleRatchet {
 
     @ExperimentalUnsignedTypes
     @ExperimentalStdlibApi
-    fun decrypt(message: Message, associatedData: ByteArray? = null): ByteArray {
+    suspend fun decrypt(message: Message, associatedData: ByteArray? = null): ByteArray {
         messageKeyCache?.getMessageKey(message.header.messageNumber, message.header.publicKey.asBytes)?.let {
             return decrypt(message, Key.fromBytes(it), associatedData)
         }
@@ -134,7 +134,7 @@ class DoubleRatchet {
     }
 
     @ExperimentalStdlibApi
-    private fun skipReceivedMessages(nextMessageNumber: Int, remotePublicKey: Key) {
+    private suspend fun skipReceivedMessages(nextMessageNumber: Int, remotePublicKey: Key) {
         if (nextMessageNumber - receivedMessageNumber > maxSkip) {
             throw DRError.ExceededMaxSkipException()
         }
