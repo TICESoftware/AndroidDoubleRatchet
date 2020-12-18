@@ -96,8 +96,8 @@ class DoubleRatchet {
     @ExperimentalUnsignedTypes
     @ExperimentalStdlibApi
     fun decrypt(message: Message, associatedData: ByteArray? = null): ByteArray {
-        messageKeyCache?.getMessageKey(message.header.messageNumber, message.header.publicKey)?.let {
-            return decrypt(message, it, associatedData)
+        messageKeyCache?.getMessageKey(message.header.messageNumber, message.header.publicKey.asBytes)?.let {
+            return decrypt(message, Key.fromBytes(it), associatedData)
         }
 
         if (message.header.publicKey == rootChain.remotePublicKey &&
@@ -141,7 +141,7 @@ class DoubleRatchet {
 
         while (receivedMessageNumber < nextMessageNumber) {
             val skippedMessageKey = receivingChain.nextMessageKey()
-            messageKeyCache?.add(skippedMessageKey, receivedMessageNumber, remotePublicKey)
+            messageKeyCache?.add(skippedMessageKey.asBytes, receivedMessageNumber, remotePublicKey.asBytes)
             receivedMessageNumber++
         }
     }

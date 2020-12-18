@@ -252,17 +252,17 @@ class MainActivity : AppCompatActivity() {
 }
 
 class Cache: MessageKeyCache {
-    data class MapKey(val messageNumber: Int, val publicKey: Key)
-    private val cachedKeys: MutableMap<MapKey, Key> = mutableMapOf<MapKey, Key>()
+    data class MapKey(val messageNumber: Int, val publicKey: ByteArray)
+    private val cachedKeys: MutableMap<MapKey, ByteArray> = mutableMapOf<MapKey, ByteArray>()
 
-    override fun add(messageKey: Key, messageNumber: Int, publicKey: Key) {
+    override fun add(messageKey: ByteArray, messageNumber: Int, publicKey: ByteArray) {
         cachedKeys[MapKey(messageNumber, publicKey)] = messageKey
     }
 
-    override fun getMessageKey(messageNumber: Int, publicKey: Key): Key? =
+    override fun getMessageKey(messageNumber: Int, publicKey: ByteArray): ByteArray? =
         cachedKeys[MapKey(messageNumber, publicKey)]
 
-    override fun remove(publicKey: Key, messageNumber: Int) {
+    override fun remove(publicKey: ByteArray, messageNumber: Int) {
         cachedKeys.remove(MapKey(messageNumber, publicKey))
     }
 }
