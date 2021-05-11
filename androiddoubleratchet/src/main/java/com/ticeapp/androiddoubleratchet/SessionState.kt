@@ -1,7 +1,7 @@
 package com.ticeapp.androiddoubleratchet
 
-import com.goterl.lazycode.lazysodium.utils.Key
-import com.goterl.lazycode.lazysodium.utils.KeyPair
+import com.goterl.lazysodium.utils.Key
+import com.goterl.lazysodium.utils.KeyPair
 
 data class SessionState(
     val rootKey: Key,

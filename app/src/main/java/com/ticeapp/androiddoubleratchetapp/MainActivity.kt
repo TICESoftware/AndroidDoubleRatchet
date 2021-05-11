@@ -2,9 +2,9 @@ package com.ticeapp.androiddoubleratchetapp
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.goterl.lazycode.lazysodium.LazySodiumAndroid
-import com.goterl.lazycode.lazysodium.SodiumAndroid
-import com.goterl.lazycode.lazysodium.utils.Key
+import com.goterl.lazysodium.LazySodiumAndroid
+import com.goterl.lazysodium.SodiumAndroid
+import com.goterl.lazysodium.utils.Key
 import com.ticeapp.androiddoubleratchet.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext

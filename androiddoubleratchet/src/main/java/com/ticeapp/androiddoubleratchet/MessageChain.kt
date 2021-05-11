@@ -1,9 +1,9 @@
 package com.ticeapp.androiddoubleratchet
 
-import com.goterl.lazycode.lazysodium.LazySodiumAndroid
-import com.goterl.lazycode.lazysodium.SodiumAndroid
-import com.goterl.lazycode.lazysodium.interfaces.Auth
-import com.goterl.lazycode.lazysodium.utils.Key
+import com.goterl.lazysodium.LazySodiumAndroid
+import com.goterl.lazysodium.SodiumAndroid
+import com.goterl.lazysodium.interfaces.Auth
+import com.goterl.lazysodium.utils.Key
 
 internal class MessageChain(var chainKey: ChainKey? = null, private val sodium: Auth.Native) {
     private val messageKeyInput = ByteArray(1) { 1.toByte() }

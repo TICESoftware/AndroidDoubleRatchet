@@ -22,7 +22,7 @@ You can then add the dependency to your app's `build.gradle` file where `$VERSIO
 ```
 dependencies {
   implementation 'com.github.TICESoftware:AndroidDoubleRatchet:$VERSION'
-  implementation "com.goterl.lazycode:lazysodium-android:4.1.0@aar"
+  implementation "com.goterl:lazysodium-android:4.1.0@aar"
   implementation 'net.java.dev.jna:jna:5.5.0@aar'
 }
  ```

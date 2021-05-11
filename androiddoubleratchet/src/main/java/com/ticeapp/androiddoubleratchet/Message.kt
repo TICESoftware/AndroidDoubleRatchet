@@ -1,6 +1,6 @@
 package com.ticeapp.androiddoubleratchet
 
-import com.goterl.lazycode.lazysodium.utils.Key
+import com.goterl.lazysodium.utils.Key
 import java.math.BigInteger
 
 class Message @ExperimentalUnsignedTypes constructor(val header: Header, val cipher: ByteArray)
